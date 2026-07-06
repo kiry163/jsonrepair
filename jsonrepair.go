@@ -875,6 +875,9 @@ func (p *JSONParser) unquotedTokenIsFollowedByColon(offset int) bool {
 		if c == ',' || c == '}' || c == ']' || c == '"' || c == '\'' {
 			return false
 		}
+		if !isUnquotedKeyPart(c) {
+			return false
+		}
 		_, size := utf8.DecodeRuneInString(p.container[p.index+i:])
 		if size <= 0 {
 			size = 1
@@ -919,7 +922,11 @@ func (p *JSONParser) hasQuoteBeforeStructuralBoundary(offset int, delim byte) bo
 }
 
 func isUnquotedKeyStart(c byte) bool {
-	return c == '_' || c == '-' || unicode.IsLetter(rune(c))
+	return c == '_' || c == '-' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+}
+
+func isUnquotedKeyPart(c byte) bool {
+	return isUnquotedKeyStart(c) || (c >= '0' && c <= '9')
 }
 
 // isASCIIDigitOrSign returns true for bytes that parseNumber actually accepts:
