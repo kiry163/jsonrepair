@@ -907,7 +907,7 @@ func (p *JSONParser) hasQuoteBeforeStructuralBoundary(offset int, delim byte) bo
 		if _, ok := getSmartQuoteByteAt(p.container, p.index, offset); ok {
 			return true
 		}
-		if c == '}' || c == ']' {
+		if c == '}' {
 			return false
 		}
 		if c == ',' && p.commaStartsNextObjectKey(offset+1, delim) {
