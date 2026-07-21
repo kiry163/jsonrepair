@@ -74,6 +74,59 @@ Output:
 {"key":"value","trailing":true}
 ```
 
+## Repair Into a Go Value
+
+Use `RepairInto` when the expected Go type is known. The target type is used as
+a structural hint while repairing malformed JSON, which helps distinguish
+string content from object keys and constrains nested value types.
+
+```go
+type Response struct {
+	Answer  string `json:"answer"`
+	Success bool   `json:"success"`
+}
+
+input := `{"answer":"foo", "unknown": 30, bar","success":true}`
+
+var response Response
+report, err := jsonrepair.RepairInto(input, &response)
+if err != nil {
+	panic(err)
+}
+
+fmt.Println(response.Answer)
+fmt.Println(report.Strategy)
+```
+
+`RepairInto` writes to the target only after repair, schema validation, and
+decoding all succeed. On failure, the target is left unchanged. The report
+contains the selected repaired JSON, strategy, warnings, and semantic repair
+actions.
+
+Strict mode rejects unknown fields, missing required fields, unresolved
+ambiguity, and schema mismatches:
+
+```go
+report, err := jsonrepair.RepairInto(
+	input,
+	&response,
+	jsonrepair.WithStrict(),
+	jsonrepair.WithRequiredFields("answer", "success"),
+)
+```
+
+Unknown-field behavior and conservative string-to-number or string-to-boolean
+conversion can be configured independently:
+
+```go
+report, err := jsonrepair.RepairInto(
+	input,
+	&response,
+	jsonrepair.WithUnknownFields(jsonrepair.UnknownWarn),
+	jsonrepair.WithTypeCoercion(true),
+)
+```
+
 ## Chinese Text Example
 
 `jsonrepair` can preserve unescaped quotation marks inside Chinese string values.
